@@ -1,0 +1,71 @@
+HTTP/1.1 200 OK
+Content-Type: text/html
+Connection: close
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Team</title>
+    <style>
+        .team-container {
+            background-color: #90ee90; /* light green */
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+        }
+        .team-header {
+            text-align: center;
+            color: red;
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .team-content {
+            display: flex;
+            justify-content: space-between;
+        }
+        .team-photo {
+            border: 2px solid black;
+            width: 200px;
+            height: 200px;
+            text-align: center;
+            background-color: white;
+        }
+        .team-list {
+            border: 2px solid black;
+            padding: 10px;
+            background-color: white;
+            color: #215868;
+        }
+        .team-list li {
+            list-style: none;
+            margin-bottom: 5px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="team-container">
+    <div class="team-header">Project Team</div>
+    <div class="team-content">
+        <div class="team-photo">
+            <img src="img.png" width="200" height="200">
+        </div>
+        <ul class="team-list">
+            <li>(1) Student name#1 / Id number</li>
+            <li>(2) Student name#2 / Id number</li>
+            <li>(3) Student name#3 / Id number</li>
+            <li>(4) Student name#4 / Id number</li>
+            <li>(5) Student name#5 / Id number</li>
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>
