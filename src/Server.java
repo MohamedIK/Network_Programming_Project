@@ -1,149 +1,126 @@
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-
 public class Server {
-    static FileInputStream fis;
-    static DataOutputStream os;
+    public static void server(){
+        try {
+            // Step 1: Create ServerSocket on Port 555
+            ServerSocket ss = new ServerSocket(555);
+            System.out.println("Server is listening on port 555");
 
-    public static void server() throws Exception {
-        // Create server socket
-        ServerSocket serverSocket = new ServerSocket(80);
-        System.out.println("Server: Server socket is created on port 80");
+            // Step 2: Get the IP Address of the Server
+            InetAddress serverAddress = InetAddress.getLocalHost();
+            System.out.println("Server IP Address: " + serverAddress.getHostAddress());
 
+            // Step 3: Wait for a Client to Send a Request to the Server
+            Socket clientSocket = ss.accept();
+            System.out.println("A client is connected to the server");
 
-        // Wait for client connection
-        Socket clientSocket = serverSocket.accept();
-        System.out.println("Server: Client socket is accepted");
+            // Step 4: Create Input and Output Streams
+            BufferedReader clientReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter clientWriter = new PrintWriter(clientSocket.getOutputStream(), true);
+            System.out.println("IO streams are created");
 
-        // Get client IP address
-        InetAddress address = clientSocket.getInetAddress();
-        String clientAddress = address.getHostAddress();
-        System.out.println("Server: Client IP Address = " + clientAddress);
+            // Step 5: Read HTTP Request from Client
+            String request = clientReader.readLine();
+            System.out.println("Received HTTP Request: " + request);
 
-        // Image sender
-//        ImageSender sender = new ImageSender(clientSocket);
-//
-//        String imagePath = "G:\\SJ\\Academic Subjects\\4th Year\\Network Programming\\Project\\NetworkProgramming Project\\src\\300.jpeg";
-//        sender.sendImage(imagePath);
+            // Step 6: Parse the requested HTML file name
+            String[] requestParts = request.split(" ");
+            String requestedFileName = requestParts[1].substring(1); // Removing the leading '/'
+            System.out.println("Requested File Name: " + requestedFileName);
 
-        // Create IO streams for network socket
-        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        OutputStream outStream = clientSocket.getOutputStream();
-        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-        System.out.println("Server: IO streams are created");
+            // Step 7: Check if the requested file exists
+            File requestedFile = new File("src/"+requestedFileName);
+            if (requestedFile.exists()) {
+                System.out.println("The requested file exists");
+                // Step 8: Send HTTP Response Header
+                clientWriter.println("HTTP/1.1 200 OK");
+                clientWriter.println("Content-Type: text/html");
+                clientWriter.println();
 
-        // Read request from client
-        String line;
-        while ((line = in.readLine()) != null) {
-            if (line.equals("")) {
-                break;
+                // Step 9: Send the HTML file to the client
+                BufferedReader fileReader = new BufferedReader(new FileReader(requestedFile));
+                String line;
+                while ((line = fileReader.readLine()) != null) {
+                    clientWriter.println(line);
+                }
+                System.out.println("The requested file is sent to the client");
+                fileReader.close();
+
+                // Step 10: Send the image file to the client
+                File imageFile = new File("src/img.png");
+                FileInputStream imageIn = new FileInputStream(imageFile);
+                OutputStream imageOs = clientSocket.getOutputStream();
+
+                byte[] buffer = new byte[1024 * 1024];
+                int bytesRead;
+                while ((bytesRead = imageIn.read(buffer)) != -1) {
+                    imageOs.write(buffer, 0, bytesRead);
+                }
+                System.out.println("The image file is sent to the client");
+
+                // Close image resources
+                imageIn.close();
+                imageOs.close();
             }
-        }
-        System.out.println("Server: Request is read from client");
+             /*
+            if (requestedFile.exists()) {
+                System.out.println("The requested file exists");
 
-        BufferedReader r = new BufferedReader(new FileReader("src/indx.html"));
+                if (requestedFileName.endsWith(".html")) {
+                    // Step 8: Send HTML Response Header
+                    clientWriter.println("HTTP/1.1 200 OK");
+                    clientWriter.println("Content-Type: text/html");
+                    clientWriter.println();
 
-        String fileName = line.split(" ")[0];
-        //System.out.println("Server: File name = " + fileName);
+                    // Step 9: Send the HTML file to the client
+                    BufferedReader fileReader = new BufferedReader(new FileReader(requestedFile));
+                    String line;
+                    while ((line = fileReader.readLine()) != null) {
+                        clientWriter.println(line);
+                    }
+                    System.out.println("The requested HTML file is sent to the client");
+                    fileReader.close();
+                } else if (requestedFileName.endsWith(".png")) {
+                    // Step 10: Send Image Response Header
+                    clientWriter.println("HTTP/1.1 200 OK");
+                    clientWriter.println("Content-Type: image/png");
+                    clientWriter.println();
 
-        File htmlFile = new File("src/indx.html");
-//        byte[] htmlFileBytes = Files.readAllBytes(Path.of("src/indx.html"));
-//        sendResponse(outStream, 200, htmlFileBytes);
+                    // Step 11: Send the image file to the client
+                    FileInputStream imageIn = new FileInputStream(requestedFile);
+                    OutputStream imageOs = clientSocket.getOutputStream();
 
-        BufferedReader fileReader = new BufferedReader(new FileReader(htmlFile));
+                    byte[] buffer = new byte[20 * 1024];
+                    int bytesRead;
+                    while ((bytesRead = imageIn.read(buffer)) != -1) {
+                        imageOs.write(buffer, 0, bytesRead);
+                    }
+                    System.out.println("The image file is sent to the client");
 
-        StringBuilder header = new StringBuilder();
-        header.append("HTTP/1.1 200 OK\r\n");
-        header.append("Content-Type: text/html\r\n");
-        header.append("Connection: close\r\n");
-        if (htmlFile.exists()) {
-            // Send HTML content for "index.html"
-//            out.println("HTTP/1.1 200 OK");
-//            out.println("Content-Type: text/html");
-//            out.println("Connection: close");
-            out.println(header.toString());
-            out.println();
-            out.flush();
-
-            //Send Body
-            String fileLine;
-            while ((fileLine = fileReader.readLine()) != null) {
-                out.println(fileLine);
+                    // Close image resources
+                    imageIn.close();
+                    imageOs.close();
+                }
+            }*/
+            else {
+                // Step 11: Send HTTP 404 Not Found Response
+                clientWriter.println("HTTP/1.1 404 Not Found");
+                clientWriter.println("Content-Type: text/plain");
+                clientWriter.println();
+                clientWriter.println("404 Not Found - The requested file does not exist.");
             }
-            System.out.println("Server: HTML content is sent to client");
-            out.flush();
-            //out.close();
 
-            // Sending image
-            int i;
+            // Step 12: Close Resources
+            clientReader.close();
+            clientWriter.close();
+            clientSocket.close();
+            ss.close();
 
-            fis = new FileInputStream("src/img_resized.png");
-            File image = new File("src/img_resized.png");
-            long imageLength = image.length();
-            os = new DataOutputStream(outStream);
-            os.writeLong(imageLength);
-            os.flush();
-            while ((i = fis.read()) > -1) {
-                os.write(i);
-            }
-            os.flush();
-            System.out.println("Server: Image is sent to client");
-
-            //fis.close();
-            //os.close();
-
-            String clientResponse = in.readLine();
-            System.out.println("Client Response: " + clientResponse);
-
-        } else {
-            out.println("HTTP/1.1 404 Not Found");
-            out.println("Content-Type: text/plain");
-            out.println("Connection: close");
-            out.println();
-            out.println("404 Not Found - The requested resource is not available.");
-            System.out.println("Server: 404 Not Found");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        // Close client socket
-        clientSocket.close();
-
-        // Close IO streams
-        in.close();
-        out.close();
-        fis.close();
-        os.close();
-        System.out.println("Server: Client socket and IO streams is closed");
-    }
-
-    private static void sendResponse(OutputStream out, int statusCode, byte[] content) throws IOException {
-        // Define HTTP headers
-        StringBuilder headers = new StringBuilder();
-        headers.append("HTTP/1.1 ").append(statusCode).append(" ");
-        switch (statusCode) {
-            case 200:
-                headers.append("OK");
-                break;
-            case 404:
-                headers.append("Not Found");
-                break;
-            default:
-                headers.append("Internal Server Error");
-        }
-        headers.append("\r\n");
-        headers.append("Content-Length: ").append(content.length).append("\r\n");
-        headers.append("Content-Type: text/html; charset=UTF-8\r\n"); // adjust based on your file type
-        headers.append("\r\n");
-
-        // Send headers first
-        out.write(headers.toString().getBytes());
-        out.flush();
-        // Send file content
-        out.write(content);
-        out.flush();
     }
 }
-
