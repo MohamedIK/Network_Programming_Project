@@ -24,11 +24,6 @@ public class Server {
         String clientAddress = address.getHostAddress();
         System.out.println("Server: Client IP Address = " + clientAddress);
 
-        // Image sender
-//        ImageSender sender = new ImageSender(clientSocket);
-//
-//        String imagePath = "G:\\SJ\\Academic Subjects\\4th Year\\Network Programming\\Project\\NetworkProgramming Project\\src\\300.jpeg";
-//        sender.sendImage(imagePath);
 
         // Create IO streams for network socket
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -81,8 +76,8 @@ public class Server {
             // Sending image
             int i;
 
-            fis = new FileInputStream("src/img_resized.png");
-            File image = new File("src/img_resized.png");
+            fis = new FileInputStream("src/img2.png");
+            File image = new File("src/img2.png");
             long imageLength = image.length();
             os = new DataOutputStream(outStream);
             os.writeLong(imageLength);
@@ -144,6 +139,10 @@ public class Server {
         // Send file content
         out.write(content);
         out.flush();
+    }
+
+    public static void main(String[] args) throws Exception {
+        Server.server();
     }
 }
 

@@ -8,24 +8,17 @@ public class Client {
 
     static FileOutputStream fos;
     static DataInputStream dis;
-
+    static PrintWriter out;
+    static BufferedReader in;
     public static void client() throws Exception {
-        //4293affe-609b-4f00-894d-a6a6a6871409.mshome.net
-        // Get IP address of server
-        /*InetAddress address = InetAddress.getByName("4293affe-609b-4f00-894d-a6a6a6871409.mshome.net");
-        String serverAddress = address.getHostAddress();
-        System.out.println("Client: Server IP Address = " + serverAddress);*/
-
         //Create client socket
-        //Socket clientSocket = new Socket(serverAddress, 80);
         Socket clientSocket = new Socket("localhost", 80);
         System.out.println("Client: Client Socket is created on port 80");
 
-//        ImageReceiver.receiveAndDisplayImage(clientSocket);
-
         // Create IO streams for network socket
-        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        out = new PrintWriter(clientSocket.getOutputStream(), true);
+
         System.out.println("Client: IO streams are created");
 
         // Send request to server
@@ -33,10 +26,6 @@ public class Client {
         out.println();
         System.out.println("Client: Request is sent to server");
         StringBuilder responseContent = receiveResponseBufferedReader(in);
-
-//        BufferedInputStream bufferedIn = new BufferedInputStream(clientSocket.getInputStream());
-//        int statusCode = receiveResponse(bufferedIn);
-
 
         // Check the response code
         if (responseContent.toString().contains("HTTP/1.1 200 OK")) {
@@ -47,47 +36,50 @@ public class Client {
             writer.close();
             System.out.println("Client: HTML content is saved to " + fileName);
             writer.close();
-
+            // receive image
+            String imagePath = "src/img.png";
             dis = new DataInputStream(clientSocket.getInputStream());
             fos = new FileOutputStream("src/img.png");
 
-            long imageSize = dis.readLong();
-            int counter = 0;
-            int pixel;
-            for (int i = 0; i < imageSize; i++) {
-                pixel = dis.read();
-                fos.write(pixel);
-            }
-            fos.flush();
-            System.out.println("Client:Image  is saved to src/img.png");
+            // Receive image from server and save it
+            receiveImage(clientSocket,imagePath);
 
             // Open the HTML file in the default web browser
-            openHtmlFile("G:/SJ/Academic%20Subjects/4th%20Year/Network%20Programming/Network_Programming_Project/Network%20Programming%20Project/src/receivedFile.html");
+            openHtmlFile("G:/SJ/Academic%20Subjects/4th%20Year/Network%20Programming/Network_Programming_Project/Network%20Programming%20Project/src/receivedFile.html");            // Send a response message to the server
 
-            // Send a response message to the server
-            PrintWriter serverOut = new PrintWriter(clientSocket.getOutputStream(), true);
-            serverOut.println("I RECEIVED THE INFORMATION OF STUDENT’s PROJECT GROUP");
-            serverOut.close();
+            //
+            out.println("I RECEIVED THE INFORMATION OF STUDENT’s PROJECT GROUP");
             System.out.println("Client: Response message is sent to server correct");
         } else if (responseContent.toString().contains("HTTP/1.1 404")) {
-            // Send a message to the server
-            PrintWriter serverOut = new PrintWriter(clientSocket.getOutputStream(), true);
-            serverOut.println("I DID NOT RECEIVED THE INFORMATION OF STUDENT’s PROJECT GROUP");
-            serverOut.close();
+            out.println("I DID NOT RECEIVED THE INFORMATION OF STUDENT’s PROJECT GROUP");
             System.out.println("Client: Response message is sent to server incorrect");
         }
 
         // Close client socket
         clientSocket.close();
-
         // Close IO streams
         fos.close();
         dis.close();
         in.close();
         out.close();
+
         System.out.println("Client: IO streams and socket are closed");
     }
+    static void sendConfirmation(String response){
 
+    }
+
+    static void receiveImage(Socket clientSocket,String filePath) throws IOException {
+        long imageSize = dis.readLong();
+        int counter = 0;
+        int pixel;
+        for (int i = 0; i < imageSize; i++) {
+            pixel = dis.read();
+            fos.write(pixel);
+        }
+        fos.flush();
+        System.out.println("Client:Image  is saved to src/img.png");
+    }
     public static void openHtmlFile(String filePath) throws Exception {
         // Using Desktop.getDesktop().browse(...);
         Desktop desktop = Desktop.getDesktop();
@@ -99,15 +91,6 @@ public class Client {
             throw new UnsupportedOperationException("Desktop open not supported");
         }
 
-        // Using Runtime.getRuntime().exec("...");
-    /*
-    String os = System.getProperty("os.name").toLowerCase();
-    if (os.contains("win")) {
-        Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + filePath);
-    } else {
-        // Add platform-specific code for other OSes
-    }
-    */
     }
 
     private static StringBuilder receiveResponseBufferedReader(BufferedReader in) throws IOException {
@@ -164,5 +147,9 @@ public class Client {
             System.out.println(html.toString());
 
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        client();
     }
 }
